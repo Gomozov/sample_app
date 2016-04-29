@@ -1,7 +1,8 @@
 class UsersController < ApplicationController
-  before_action :signed_in_user, only: [:index, :edit, :update, :destroy]
-  before_action :correct_user,   only: [:edit, :update]
-  before_action :admin_user,     only: :destroy
+  before_action :signed_in_user,     only: [:index, :edit, :update, :destroy]
+  before_action :correct_user,       only: [:edit, :update]
+  before_action :admin_user,         only: :destroy
+  before_action :not_signed_in_user, only: [:new, :create]
 
   def destroy
     User.find(params[:id]).destroy
@@ -19,6 +20,7 @@ class UsersController < ApplicationController
 
   def show
     @user = User.find(params[:id])
+    @microposts = @user.microposts.paginate(page: params[:page])
   end
 
   def create
@@ -52,13 +54,13 @@ class UsersController < ApplicationController
                      :password_confirmation)
     end
 
-    def signed_in_user
-      unless signed_in?
-        store_location
-        flash[:notice] = "Please sign in."
-        redirect_to signin_url
-      end
-    end
+    #def signed_in_user
+    #  unless signed_in?
+    #    store_location
+    #    flash[:notice] = "Please sign in."
+    #    redirect_to signin_url
+    #  end
+    #end
 
     def correct_user
       @user = User.find(params[:id])
@@ -67,5 +69,11 @@ class UsersController < ApplicationController
 
     def admin_user
       redirect_to(root_url) unless current_user.admin?
+    end
+
+    def not_signed_in_user
+      if signed_in?
+        redirect_to root_url
+      end
     end
 end

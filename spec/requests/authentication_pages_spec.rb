@@ -28,11 +28,7 @@ require 'spec_helper'
 
       describe "with valid information" do
         let(:user) { FactoryGirl.create(:user) }
-        before do
-          fill_in "Email",    with: user.email.upcase
-          fill_in "Password", with: user.password
-          click_button "Sign in"
-        end
+        before { sign_in user}
 
         it { should have_title(user.name) }
         it { should have_link('Users',       href: users_path) }
@@ -43,11 +39,35 @@ require 'spec_helper'
         describe "followed by signout" do
           before { click_link "Sign out" }
           it { should have_link('Sign in') }
+          it { should_not have_link('Settings', href: edit_user_path(user)) }
+          it { should_not have_link('Profile', href: user_path(user)) }
         end
       end
     end
 
   describe "authorization" do
+
+    describe "in the Microposts controller" do
+        describe "submitting to the create action" do
+          before { post microposts_path }
+          specify { expect(response).to redirect_to(signin_path) }
+        end
+
+        describe "submitting to the destroy action" do
+          before { delete micropost_path(FactoryGirl.create(:micropost)) }
+          specify { expect(response).to redirect_to(signin_path) }
+        end
+      end
+
+    describe "for signed-in users" do
+      let(:user) { FactoryGirl.create(:user) }
+      before { sign_in user, no_capybara: true }
+
+      describe "visit signup page" do
+        before { get signup_path(user) }
+        specify { expect(response).to redirect_to(root_url) }
+      end
+    end
 
     describe "for non-signed-in users" do
       let(:user) { FactoryGirl.create(:user) }
